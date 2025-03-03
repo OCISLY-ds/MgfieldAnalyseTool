@@ -100,7 +100,6 @@
 
             <!-- Download-Link für den Plot -->
             <div class="text-center">
-                <a href="{{ url_for('download_file', filename=plot_url) }}" class="btn btn-secondary" download>Plot herunterladen</a>
                 <a href="{{ url_for('download_file', filename=plot_jpg_url) }}" class="btn btn-secondary" download>Plot als JPG herunterladen</a>
             </div>
         {% endif %}
@@ -112,7 +111,6 @@
 
             <!-- Download-Link für die Weltkarte -->
             <div class="text-center">
-                <a href="{{ url_for('download_file', filename=map_plot_url) }}" class="btn btn-secondary" download>Weltkarte herunterladen</a>
                 <a href="{{ url_for('download_file', filename=map_plot_jpg_url) }}" class="btn btn-secondary" download>Weltkarte als JPG herunterladen</a>
             </div>
         {% endif %}
@@ -124,7 +122,6 @@
 
             <!-- Download-Link für die Korrelationsmatrix -->
             <div class="text-center">
-                <a href="{{ url_for('download_file', filename=corr_plot_url) }}" class="btn btn-secondary" download>Korrelationsmatrix herunterladen</a>
                 <a href="{{ url_for('download_file', filename=corr_plot_jpg_url) }}" class="btn btn-secondary" download>Korrelationsmatrix als JPG herunterladen</a>
             </div>
         {% endif %}
@@ -138,7 +135,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 Florian von Bargen</p>
+        <p>&copy; 2025 Florian von Bargen, API R.S Weigel</p>
     </footer>
 
     <!-- Bootstrap JS and dependencies -->

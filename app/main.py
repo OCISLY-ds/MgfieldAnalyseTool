@@ -116,7 +116,10 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     # Plot der Magnetfeldstärke
     fig = go.Figure()
     for iaga_code, (timestamps, magnitudes, observatory_name) in combined_data.items():
-        fig.add_trace(go.Scatter(x=timestamps, y=magnitudes, mode='lines', name=f'{observatory_name} ({iaga_code})'))
+        # Verwenden Sie den ersten Wert als Basislinie
+        baseline = magnitudes[0]
+        adjusted_magnitudes = [m - baseline for m in magnitudes]
+        fig.add_trace(go.Scatter(x=timestamps, y=adjusted_magnitudes, mode='lines', name=f'{observatory_name} ({iaga_code})'))
 
     fig.update_layout(
         title='Vergleich der Magnetfeldbeträge zwischen den Observatorien',
