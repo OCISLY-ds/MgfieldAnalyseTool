@@ -132,7 +132,12 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     plot_filepath = os.path.join(output_dir, plot_filename)
     fig.write_html(plot_filepath)
 
+    plot_jpg_filename = f'combined_magnitude_{start[:10]}_to_{stop[:10]}.jpg'
+    plot_jpg_filepath = os.path.join(output_dir, plot_jpg_filename)
+    fig.write_image(plot_jpg_filepath, format='jpg')
+
     print(f'Kombinierter Graph gespeichert: {plot_filepath}')
+    print(f'Kombinierter Graph als JPG gespeichert: {plot_jpg_filepath}')
 
     print("Starte Erstellung der Weltkarte...")  # Debugging-Ausgabe
     # Plot der Weltkarte mit den Stationen
@@ -196,7 +201,12 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     map_plot_filepath = os.path.join(output_dir, map_plot_filename)
     map_fig.write_html(map_plot_filepath)
 
+    map_plot_jpg_filename = f'stations_map_{start[:10]}_to_{stop[:10]}.jpg'
+    map_plot_jpg_filepath = os.path.join(output_dir, map_plot_jpg_filename)
+    map_fig.write_image(map_plot_jpg_filepath, format='jpg')
+
     print(f'Weltkarte der Stationen gespeichert: {map_plot_filepath}')
+    print(f'Weltkarte der Stationen als JPG gespeichert: {map_plot_jpg_filepath}')
     print("Erstellung der Weltkarte abgeschlossen.")  # Debugging-Ausgabe
 
     print("Starte Erstellung der Korrelationsmatrix...")  # Debugging-Ausgabe
@@ -247,10 +257,15 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     corr_plot_filepath = os.path.join(output_dir, corr_plot_filename)
     fig_corr.write_html(corr_plot_filepath)
 
+    corr_plot_jpg_filename = f'correlation_matrix_{start[:10]}_to_{stop[:10]}.jpg'
+    corr_plot_jpg_filepath = os.path.join(output_dir, corr_plot_jpg_filename)
+    fig_corr.write_image(corr_plot_jpg_filepath, format='jpg')
+
     print(f'Korrelationsmatrix gespeichert: {corr_plot_filepath}')
+    print(f'Korrelationsmatrix als JPG gespeichert: {corr_plot_jpg_filepath}')
     print("Erstellung der Korrelationsmatrix abgeschlossen.")  # Debugging-Ausgabe
 
-    return plot_filename, map_plot_filename, corr_plot_filename
+    return plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -295,9 +310,9 @@ def home():
         combined_data = process_data(stations, start, stop, valid_observatories)
 
         if combined_data:
-            plot_filename, map_plot_filename, corr_plot_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
+            plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
             csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
-            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop)
+            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop)
         else:
             return render_template('index.html', message="Fehler: Keine Daten gefunden.", start=start, stop=stop)
     
