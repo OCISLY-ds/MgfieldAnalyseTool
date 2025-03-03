@@ -64,7 +64,9 @@ def load_or_fetch_data(iaga_code, start, stop):
         try:
             with open(filename, 'r') as file:
                 data = json.load(file)
-            return np.array(data)
+            # Konvertiere die Daten zurück in ein numpy-Array
+            data = np.array([[item[0], np.array(item[1])] for item in data])
+            return data
         except json.JSONDecodeError as e:
             print(f"Error loading JSON data from {filename}: {str(e)}")
             # Datei ist ungültig, löschen und neu abrufen
@@ -77,6 +79,8 @@ def load_or_fetch_data(iaga_code, start, stop):
         serializable_data = [[item[0].decode('utf-8'), item[1].tolist()] for item in data]
         with open(filename, 'w') as file:
             json.dump(serializable_data, file)
+        # Konvertiere die Daten zurück in ein numpy-Array
+        data = np.array([[item[0], np.array(item[1])] for item in serializable_data])
     return data
 
 def process_data(iaga_codes, start, stop, valid_observatories, threshold):
