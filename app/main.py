@@ -195,6 +195,7 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     map_fig.write_html(map_plot_filename)
 
     print(f'Weltkarte der Stationen gespeichert: {map_plot_filename}')
+    print("Erstellung der Weltkarte abgeschlossen.")  # Debugging-Ausgabe
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
