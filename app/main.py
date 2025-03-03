@@ -68,8 +68,10 @@ def load_or_fetch_data(iaga_code, start, stop):
         print(f"Fetching data from server for {iaga_code}")
         data = fetch_data_from_server(iaga_code, start, stop)
         if data is not None:
+            # Konvertiere die Daten in ein serialisierbares Format
+            serializable_data = [[item[0].decode('utf-8'), item[1].tolist()] for item in data]
             with open(filename, 'w') as file:
-                json.dump(data.tolist(), file)
+                json.dump(serializable_data, file)
         return data
 
 def process_data(iaga_codes, start, stop, valid_observatories, threshold):
