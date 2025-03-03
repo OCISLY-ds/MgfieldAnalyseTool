@@ -1,17 +1,16 @@
-from flask import Flask, render_template, request, send_from_directory, send_file
-from flask_socketio import SocketIO, emit
-from werkzeug.utils import safe_join
-import plotly.graph_objects as go
 import os
+import json
 import pandas as pd
+from datetime import datetime
+from flask import Flask, render_template, request, send_from_directory
+from flask_socketio import SocketIO
 from hapiclient import hapi
-from datetime import datetime, timedelta, timezone
-import csv
 import numpy as np
 import math
 from tqdm import tqdm
 import time
-import json
+import csv
+import plotly.graph_objects as go
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -20,6 +19,10 @@ socketio = SocketIO(app)
 DOWNLOAD_FOLDER = '/tmp/plots'
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
+
+# Ordner für gespeicherte Daten
+DATA_FOLDER = '/tmp/data'
+os.makedirs(DATA_FOLDER, exist_ok=True)
 
 # Benutzerdefinierter Filter für die Datumsformatierung
 @app.template_filter('datetimeformat')
@@ -41,11 +44,35 @@ def load_valid_observatories(csv_file):
     print(f"Valid observatories loaded: {valid_observatories}")  # Debugging-Ausgabe
     return valid_observatories
 
-def process_data(iaga_codes, start, stop, valid_observatories, threshold):
+def fetch_data_from_server(iaga_code, start, stop):
     server = 'https://imag-data.bgs.ac.uk/GIN_V1/hapi'
     parameters = 'Field_Vector'
     opts = {'logging': True, 'usecache': True}
+    dataset = f'{iaga_code.lower()}/best-avail/PT1M/xyzf'
 
+    try:
+        data, _ = hapi(server, dataset, parameters, start, stop, **opts)
+        return data
+    except Exception as e:
+        print(f"Error fetching data for {iaga_code}: {str(e)}")
+        return None
+
+def load_or_fetch_data(iaga_code, start, stop):
+    filename = os.path.join(DATA_FOLDER, f'{iaga_code}_{start}_{stop}.json')
+    if os.path.exists(filename):
+        print(f"Loading data from {filename}")
+        with open(filename, 'r') as file:
+            data = json.load(file)
+        return np.array(data)
+    else:
+        print(f"Fetching data from server for {iaga_code}")
+        data = fetch_data_from_server(iaga_code, start, stop)
+        if data is not None:
+            with open(filename, 'w') as file:
+                json.dump(data.tolist(), file)
+        return data
+
+def process_data(iaga_codes, start, stop, valid_observatories, threshold):
     combined_data = {}
     filtered_data_info = []
     start_time = time.time()
@@ -57,13 +84,7 @@ def process_data(iaga_codes, start, stop, valid_observatories, threshold):
         else:
             observatory_name = valid_observatories[iaga_code]['Name']
 
-        dataset = f'{iaga_code.lower()}/best-avail/PT1M/xyzf'
-
-        try:
-            data, _ = hapi(server, dataset, parameters, start, stop, **opts)
-        except Exception as e:
-            print(f"Error fetching data for {iaga_code}: {str(e)}")
-            continue
+        data = load_or_fetch_data(iaga_code, start, stop)
 
         if isinstance(data, np.ndarray) and data.ndim == 1:
             timestamps = [item[0].decode('utf-8') for item in data]
