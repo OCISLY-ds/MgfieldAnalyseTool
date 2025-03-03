@@ -316,12 +316,10 @@ def home():
         plot_filename, plot_changes_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
         map_plot_filename = f'stations_map_{start[:10]}_to_{stop[:10]}.html'
         csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
-        correlation_matrix_html = correlation_matrix.style.background_gradient(cmap='Greens').format(precision=2).to_html() if not correlation_matrix.empty else None
 
-        return render_template('index.html', message=f"Plots erfolgreich erstellt! Anzahl der gefilterten Datenpunkte: {total_filtered}", plot_url=f'combined/{plot_filename}', plot_changes_url=f'combined/{plot_changes_filename}', map_plot_url=f'combined/{map_plot_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, stations=stations, filtered_data_info=filtered_data_info, correlation_matrix=correlation_matrix_html)
+        return render_template('index.html', message=f"Plots erfolgreich erstellt! Anzahl der gefilterten Datenpunkte: {total_filtered}", plot_url=f'combined/{plot_filename}', plot_changes_url=f'combined/{plot_changes_filename}', map_plot_url=f'combined/{map_plot_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, stations=stations, filtered_data_info=filtered_data_info, correlation_matrix=correlation_matrix)
     
-    return render_template('index.html', message="Bitte die Start- und Endzeit eingeben.", start=None, stop=None)
-    
+    return render_template('index.html', message="Bitte die Start- und Endzeit eingeben.", start=None, stop=None)    
 @app.route('/download/<path:filename>')
 def download_file(filename):
     print(f"Download requested for file: {filename}")  # Debugging-Ausgabe
