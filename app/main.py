@@ -146,22 +146,6 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     # Plot der Weltkarte mit den Stationen
     map_fig = go.Figure()
 
-    # Manuell hinzugefügte Station BUE
-    bue_station = {'Longitude': 9.424, 'Latitude': 53.651, 'Name': 'BUE'}
-    map_fig.add_trace(go.Scattergeo(
-        lon=[bue_station['Longitude']],
-        lat=[bue_station['Latitude']],
-        text='BUE',
-        mode='markers+text',
-        textposition='top center',  # Text über dem Marker
-        marker=dict(
-            size=8,
-            color='red',
-            symbol='circle'
-        ),
-        name='BUE'
-    ))
-
     for iaga_code in combined_data.keys():
         observatory = valid_observatories[iaga_code]
         map_fig.add_trace(go.Scattergeo(
