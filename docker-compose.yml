@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  webapp:
+    build: .
+    ports:
+      - "8000:8000"  # Hier wird der Host-Port 8000 auf den Container-Port 8000 gemappt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - FLASK_RUN_HOST=0.0.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: "2.5"

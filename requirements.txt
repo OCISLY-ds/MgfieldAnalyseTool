@@ -1,0 +1,8 @@
+Flask
+Flask-SocketIO
+hapiclient
+hapiplot
+matplotlib
+plotly
+requests
+tqdm
