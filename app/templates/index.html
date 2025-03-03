@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -39,25 +40,29 @@
         <!-- Formular für Start- und Endzeit -->
         <form method="POST" class="mb-4">
             <div class="form-row">
-                <div class="form-group col-md-3">
-                    <label for="station">Stationen (Komma getrennt):</label>
-                    <input type="text" class="form-control" id="station" name="station" placeholder="z.B. NGK, ESK, WNG">
+                <div class="form-group col-md-4">
+                    <label for="station">Stationen:</label>
+                    <select class="form-control" id="station" name="station" multiple required>
+                        <option value="NGK">NGK</option>
+                        <option value="ESK">ESK</option>
+                        <option value="VAL">VAL</option>
+                        <option value="WNG">WNG</option>
+                        <option value="HLP">HLP</option>
+                        <option value="ARS">ARS</option>
+                        <!-- Weitere Optionen können hier hinzugefügt werden -->
+                    </select>
                 </div>
-                <div class="form-group col-md-3">
-                    <label for="distance">Abstand zur Station BUE auf dem Breitengrad:</label>
-                    <input type="number" class="form-control" id="distance" name="distance" value="2">
+                <div class="form-group col-md-4">
+                    <label for="custom_station">Benutzerdefinierte Station (drei Buchstaben):</label>
+                    <input type="text" class="form-control" id="custom_station" name="custom_station" pattern="[A-Za-z]{3}" title="Drei Buchstaben" placeholder="z.B. ABC">
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-4">
                     <label for="start">Startzeit:</label>
                     <input type="datetime-local" class="form-control" id="start" name="start" value="{{ start or '2024-09-01T00:00' }}" required>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-4">
                     <label for="stop">Endzeit:</label>
                     <input type="datetime-local" class="form-control" id="stop" name="stop" value="{{ stop or '2024-10-01T00:00' }}" required>
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="threshold">Schwellenwert (nT):</label>
-                    <input type="number" class="form-control" id="threshold" name="threshold" value="100000" required>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary btn-block">Daten abrufen und plotten</button>
@@ -69,10 +74,6 @@
 
         <div id="progress-container" class="text-center my-4" style="display: none;">
             <h2>Fortschritt: <span id="progress">0</span>%</h2>
-            <div class="progress">
-                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <h3>Geschätzte verbleibende Zeit: <span id="remaining-time">0</span> Sekunden</h3>
         </div>
 
         {% if plot_url %}
@@ -83,17 +84,6 @@
             <!-- Download-Link für den Plot -->
             <div class="text-center">
                 <a href="{{ url_for('download_file', filename=plot_url) }}" class="btn btn-secondary" download>Plot herunterladen</a>
-            </div>
-        {% endif %}
-
-        {% if plot_changes_url %}
-            <h2 class="text-center my-4">Veränderungen des Magnetfeldes von {{ start|datetimeformat }} bis {{ stop|datetimeformat }}:</h2>
-            <!-- Einbetten des interaktiven Plots -->
-            <iframe src="{{ url_for('download_file', filename=plot_changes_url) }}" width="100%" height="600" class="mb-4"></iframe>
-
-            <!-- Download-Link für den Plot -->
-            <div class="text-center">
-                <a href="{{ url_for('download_file', filename=plot_changes_url) }}" class="btn btn-secondary" download>Plot herunterladen</a>
             </div>
         {% endif %}
 
@@ -114,60 +104,10 @@
                 <a href="{{ url_for('download_file', filename=csv_url) }}" class="btn btn-secondary" download>CSV herunterladen</a>
             </div>
         {% endif %}
-
-        {% if stations %}
-            <h2 class="text-center my-4">Ausgewählte Stationen:</h2>
-            <ul class="list-group">
-                {% for station in stations %}
-                    <li class="list-group-item">{{ station }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        {% if filtered_data_info %}
-            <h2 class="text-center my-4">
-                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#filteredDataCollapse" aria-expanded="false" aria-controls="filteredDataCollapse">
-                    Gefilterte Datenpunkte (Anzahl: {{ filtered_data_info|length }})
-                </button>
-            </h2>
-            <div class="collapse" id="filteredDataCollapse">
-                <ul class="list-group">
-                    {% for info in filtered_data_info %}
-                        <li class="list-group-item">{{ info }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-
-        {% if correlation_matrix %}
-            <h2 class="text-center my-4">Korrelationsmatrix:</h2>
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Station</th>
-                            {% for station in correlation_matrix.columns %}
-                                <th>{{ station }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for station, row in correlation_matrix.iterrows() %}
-                            <tr>
-                                <td>{{ station }}</td>
-                                {% for value in row %}
-                                    <td>{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
     </div>
 
     <footer>
-        <p>&copy; 2025 Florian von Bargen, API: R.S. Weigel</p>
+        <p>&copy; 2025 Florian von Bargen</p>
     </footer>
 
     <!-- Bootstrap JS and dependencies -->
@@ -193,13 +133,8 @@
         socket.on('progress', function(data) {
             var progressContainer = document.getElementById('progress-container');
             var progressElement = document.getElementById('progress');
-            var progressBar = document.getElementById('progress-bar');
-            var remainingTimeElement = document.getElementById('remaining-time');
             progressContainer.style.display = 'block';
             progressElement.innerText = data.progress;
-            progressBar.style.width = data.progress + '%';
-            progressBar.setAttribute('aria-valuenow', data.progress);
-            remainingTimeElement.innerText = data.remaining_time;
         });
 
         // Standardstationen auswählen
