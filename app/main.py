@@ -197,6 +197,58 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     print(f'Weltkarte der Stationen gespeichert: {map_plot_filename}')
     print("Erstellung der Weltkarte abgeschlossen.")  # Debugging-Ausgabe
 
+    print("Starte Erstellung der Korrelationsmatrix...")  # Debugging-Ausgabe
+    # Berechnung der Korrelationsmatrix
+    stations = list(combined_data.keys())
+    correlation_matrix = pd.DataFrame(index=stations, columns=stations)
+
+    # Alle Zeitstempel sammeln und sortieren
+    all_timestamps = sorted(set(ts for timestamps, _, _ in combined_data.values() for ts in timestamps))
+
+    # Interpolierte Magnituden für alle Stationen
+    interpolated_data = {}
+    for station in stations:
+        timestamps, magnitudes, _ = combined_data[station]
+        magnitudes_series = pd.Series(magnitudes, index=pd.to_datetime(timestamps))
+        magnitudes_series = magnitudes_series.reindex(pd.to_datetime(all_timestamps)).interpolate()
+        interpolated_data[station] = magnitudes_series
+
+    for i, station1 in enumerate(stations):
+        for j, station2 in enumerate(stations):
+            if i <= j:  # Nur obere Dreiecksmatrix berechnen
+                magnitudes1 = interpolated_data[station1]
+                magnitudes2 = interpolated_data[station2]
+                correlation = np.corrcoef(magnitudes1, magnitudes2)[0, 1]
+                correlation_matrix.loc[station1, station2] = correlation
+                correlation_matrix.loc[station2, station1] = correlation
+
+    # Plot der Korrelationsmatrix
+    fig_corr = go.Figure(data=go.Heatmap(
+        z=correlation_matrix.values.astype(float),
+        x=correlation_matrix.columns,
+        y=correlation_matrix.index,
+        colorscale='Greens',
+        zmin=0,
+        zmax=1,
+        colorbar=dict(title='Korrelation')
+    ))
+
+    fig_corr.update_layout(
+        title='Korrelationsmatrix der Magnetfeldstärken',
+        xaxis_title='Station',
+        yaxis_title='Station',
+        template='plotly_white',
+        margin=dict(l=0, r=0, t=0, b=0)  # Entfernen der Ränder
+    )
+
+    corr_plot_filename = os.path.join(output_dir, f'correlation_matrix_{start[:10]}_to_{stop[:10]}.html')
+    fig_corr.write_html(corr_plot_filename)
+
+    print(f'Korrelationsmatrix gespeichert: {corr_plot_filename}')
+    print("Erstellung der Korrelationsmatrix abgeschlossen.")  # Debugging-Ausgabe
+
+    return plot_filename, map_plot_filename, corr_plot_filename
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
@@ -240,10 +292,9 @@ def home():
         combined_data = process_data(stations, start, stop, valid_observatories)
 
         if combined_data:
-            plot_filename = f'combined_magnitude_{start[:10]}_to_{stop[:10]}.html'
-            map_plot_filename = f'stations_map_{start[:10]}_to_{stop[:10]}.html'
+            plot_filename, map_plot_filename, corr_plot_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
             csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
-            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop)
+            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop)
         else:
             return render_template('index.html', message="Fehler: Keine Daten gefunden.", start=start, stop=stop)
     
