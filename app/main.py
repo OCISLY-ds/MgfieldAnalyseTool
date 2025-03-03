@@ -61,18 +61,23 @@ def load_or_fetch_data(iaga_code, start, stop):
     filename = os.path.join(DATA_FOLDER, f'{iaga_code}_{start}_{stop}.json')
     if os.path.exists(filename):
         print(f"Loading data from {filename}")
-        with open(filename, 'r') as file:
-            data = json.load(file)
-        return np.array(data)
-    else:
-        print(f"Fetching data from server for {iaga_code}")
-        data = fetch_data_from_server(iaga_code, start, stop)
-        if data is not None:
-            # Konvertiere die Daten in ein serialisierbares Format
-            serializable_data = [[item[0].decode('utf-8'), item[1].tolist()] for item in data]
-            with open(filename, 'w') as file:
-                json.dump(serializable_data, file)
-        return data
+        try:
+            with open(filename, 'r') as file:
+                data = json.load(file)
+            return np.array(data)
+        except json.JSONDecodeError as e:
+            print(f"Error loading JSON data from {filename}: {str(e)}")
+            # Datei ist ungültig, löschen und neu abrufen
+            os.remove(filename)
+    
+    print(f"Fetching data from server for {iaga_code}")
+    data = fetch_data_from_server(iaga_code, start, stop)
+    if data is not None:
+        # Konvertiere die Daten in ein serialisierbares Format
+        serializable_data = [[item[0].decode('utf-8'), item[1].tolist()] for item in data]
+        with open(filename, 'w') as file:
+            json.dump(serializable_data, file)
+    return data
 
 def process_data(iaga_codes, start, stop, valid_observatories, threshold):
     combined_data = {}
