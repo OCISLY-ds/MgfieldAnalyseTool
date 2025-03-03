@@ -195,17 +195,28 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        stations = request.form.getlist('station')
+        stations_input = request.form.getlist('station')
         custom_station = request.form.get('custom_station').upper()
         if custom_station and len(custom_station) == 3:
-            stations.append(custom_station)
+            stations_input.append(custom_station)
         start = request.form.get('start', '2024-09-01T00:00')
         stop = request.form.get('stop', '2024-10-01T00:00')
-        
-        print(f"Benutzer hat folgende Zeiten eingegeben: Start = {start}, End = {stop}, Stationen = {stations}")
+        distance = request.form.get('distance', type=float)
+
+        print(f"Benutzer hat folgende Zeiten eingegeben: Start = {start}, End = {stop}, Stationen = {stations_input}, Abstand = {distance}")
 
         csv_file = os.path.join(os.getcwd(), 'intermagnet/IAGAlist.csv')
         valid_observatories = load_valid_observatories(csv_file)
+
+        stations = []
+        if distance is not None:
+            bue_latitude = 53.651
+            for code, observatory in valid_observatories.items():
+                if abs(observatory['Latitude'] - bue_latitude) <= distance:
+                    stations.append(code)
+
+        stations.extend(stations_input)
+        stations = list(set(stations))  # Duplikate entfernen
 
         invalid_stations = [station for station in stations if station not in valid_observatories]
         if invalid_stations:

@@ -57,6 +57,10 @@
                     <input type="text" class="form-control" id="custom_station" name="custom_station" pattern="[A-Za-z]{3}" title="Drei Buchstaben" placeholder="z.B. ABC">
                 </div>
                 <div class="form-group col-md-4">
+                    <label for="distance">Abstand zu BUE (Breitengrade):</label>
+                    <input type="number" class="form-control" id="distance" name="distance" step="0.1" placeholder="z.B. 1.0">
+                </div>
+                <div class="form-group col-md-4">
                     <label for="start">Startzeit:</label>
                     <input type="datetime-local" class="form-control" id="start" name="start" value="{{ start or '2024-09-01T00:00' }}" required>
                 </div>
