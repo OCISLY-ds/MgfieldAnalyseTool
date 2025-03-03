@@ -128,10 +128,11 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
         margin=dict(l=0, r=0, t=0, b=0)  # Entfernen der Ränder
     )
 
-    plot_filename = os.path.join(output_dir, f'combined_magnitude_{start[:10]}_to_{stop[:10]}.html')
-    fig.write_html(plot_filename)
+    plot_filename = f'combined_magnitude_{start[:10]}_to_{stop[:10]}.html'
+    plot_filepath = os.path.join(output_dir, plot_filename)
+    fig.write_html(plot_filepath)
 
-    print(f'Kombinierter Graph gespeichert: {plot_filename}')
+    print(f'Kombinierter Graph gespeichert: {plot_filepath}')
 
     print("Starte Erstellung der Weltkarte...")  # Debugging-Ausgabe
     # Plot der Weltkarte mit den Stationen
@@ -191,10 +192,11 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
         margin=dict(l=0, r=0, t=0, b=0)  # Entfernen der Ränder
     )
 
-    map_plot_filename = os.path.join(output_dir, f'stations_map_{start[:10]}_to_{stop[:10]}.html')
-    map_fig.write_html(map_plot_filename)
+    map_plot_filename = f'stations_map_{start[:10]}_to_{stop[:10]}.html'
+    map_plot_filepath = os.path.join(output_dir, map_plot_filename)
+    map_fig.write_html(map_plot_filepath)
 
-    print(f'Weltkarte der Stationen gespeichert: {map_plot_filename}')
+    print(f'Weltkarte der Stationen gespeichert: {map_plot_filepath}')
     print("Erstellung der Weltkarte abgeschlossen.")  # Debugging-Ausgabe
 
     print("Starte Erstellung der Korrelationsmatrix...")  # Debugging-Ausgabe
@@ -241,10 +243,11 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
         margin=dict(l=0, r=0, t=0, b=0)  # Entfernen der Ränder
     )
 
-    corr_plot_filename = os.path.join(output_dir, f'correlation_matrix_{start[:10]}_to_{stop[:10]}.html')
-    fig_corr.write_html(corr_plot_filename)
+    corr_plot_filename = f'correlation_matrix_{start[:10]}_to_{stop[:10]}.html'
+    corr_plot_filepath = os.path.join(output_dir, corr_plot_filename)
+    fig_corr.write_html(corr_plot_filepath)
 
-    print(f'Korrelationsmatrix gespeichert: {corr_plot_filename}')
+    print(f'Korrelationsmatrix gespeichert: {corr_plot_filepath}')
     print("Erstellung der Korrelationsmatrix abgeschlossen.")  # Debugging-Ausgabe
 
     return plot_filename, map_plot_filename, corr_plot_filename
