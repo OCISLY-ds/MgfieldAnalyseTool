@@ -74,8 +74,10 @@ def process_data(iaga_codes, start, stop, valid_observatories):
         socketio.emit('progress', {'progress': int((i + 1) / len(iaga_codes) * 100)})
 
     if combined_data:
+        print("Daten erfolgreich kombiniert. Starte Plot- und CSV-Erstellung...")
         save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
         save_combined_data_to_csv(combined_data, start, stop)
+        print("Plot- und CSV-Erstellung abgeschlossen.")
     
     return combined_data
 
@@ -110,6 +112,7 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     output_dir = os.path.join(app.config['DOWNLOAD_FOLDER'], 'combined')
     os.makedirs(output_dir, exist_ok=True)
 
+    print("Starte Erstellung des Magnetfeldstärke-Plots...")  # Debugging-Ausgabe
     # Plot der Magnetfeldstärke
     fig = go.Figure()
     for iaga_code, (timestamps, magnitudes, observatory_name) in combined_data.items():
@@ -130,6 +133,7 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
 
     print(f'Kombinierter Graph gespeichert: {plot_filename}')
 
+    print("Starte Erstellung der Weltkarte...")  # Debugging-Ausgabe
     # Plot der Weltkarte mit den Stationen
     map_fig = go.Figure()
 

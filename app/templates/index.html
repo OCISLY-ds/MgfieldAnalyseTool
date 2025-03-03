@@ -31,6 +31,11 @@
             height: 600px;
             width: 100%;
         }
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -38,7 +43,7 @@
         <h1 id="message" class="text-center my-4">{{ message }}</h1>
 
         <!-- Formular für Start- und Endzeit -->
-        <form method="POST" class="mb-4">
+        <form method="POST" class="mb-4" id="data-form">
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="selection_method">Auswahlmethode:</label>
@@ -76,6 +81,13 @@
             </div>
             <button type="submit" class="btn btn-primary btn-block">Daten abrufen und plotten</button>
         </form>
+
+        <div id="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Laden...</span>
+            </div>
+            <h2>Bitte warten, die Daten werden verarbeitet...</h2>
+        </div>
 
         <div id="progress-container" class="text-center my-4" style="display: none;">
             <h2>Fortschritt: <span id="progress">0</span>%</h2>
@@ -160,6 +172,11 @@
         document.getElementById('select-default').addEventListener('click', function() {
             var stationInput = document.getElementById('station');
             stationInput.value = 'NGK, ESK, VAL, WNG, HLP';
+        });
+
+        // Zeige Ladesymbol beim Absenden des Formulars
+        document.getElementById('data-form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
         });
 
         // Leaflet-Karte initialisieren
