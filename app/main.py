@@ -10,6 +10,8 @@ import csv
 import numpy as np
 import math
 from tqdm import tqdm
+import concurrent.futures
+import io
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -39,39 +41,43 @@ def load_valid_observatories(csv_file):
     print(f"Valid observatories loaded: {valid_observatories}")  # Debugging-Ausgabe
     return valid_observatories
 
+def fetch_data(iaga_code, server, parameters, start, stop, opts):
+    dataset = f'{iaga_code.lower()}/best-avail/PT1M/xyzf'
+    try:
+        data, _ = hapi(server, dataset, parameters, start, stop, **opts)
+        return iaga_code, data
+    except Exception as e:
+        print(f"Error fetching data for {iaga_code}: {str(e)}")
+        return iaga_code, None
+
 def process_data(iaga_codes, start, stop, valid_observatories):
     server = 'https://imag-data.bgs.ac.uk/GIN_V1/hapi'
     parameters = 'Field_Vector'
     opts = {'logging': True, 'usecache': True}
 
     combined_data = {}
-    for i, iaga_code in enumerate(tqdm(iaga_codes, desc="Processing data")):
-        dataset = f'{iaga_code.lower()}/best-avail/PT1M/xyzf'
-        observatory_name = valid_observatories[iaga_code]['Name']
-
-        try:
-            data, _ = hapi(server, dataset, parameters, start, stop, **opts)
-        except Exception as e:
-            print(f"Error: {str(e)}")
-            continue
-
-        if isinstance(data, np.ndarray) and data.ndim == 1:
-            timestamps = [item[0].decode('utf-8') for item in data]
-            vectors = np.array([item[1] for item in data])
-
-            magnitudes = [math.sqrt(x**2 + y**2 + z**2) for x, y, z in vectors]
-            filtered_data = [(t, m) for t, m in zip(timestamps, magnitudes) if m <= 160000]
-
-            if filtered_data:
-                filtered_timestamps, filtered_magnitudes = zip(*filtered_data)
-                combined_data[iaga_code] = (filtered_timestamps, filtered_magnitudes, observatory_name)
-            else:
-                print(f"Error: Alle Datenpunkte für Station {iaga_code} überschreiten den Schwellenwert von 160.000.")
-        else:
-            print(f"Error: Unerwartetes Datenformat für Station {iaga_code}.")
-
-        # Senden Sie den Fortschritt an den Client
-        socketio.emit('progress', {'progress': int((i + 1) / len(iaga_codes) * 100)})
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {executor.submit(fetch_data, iaga_code, server, parameters, start, stop, opts): iaga_code for iaga_code in iaga_codes}
+        for future in concurrent.futures.as_completed(futures):
+            iaga_code = futures[future]
+            try:
+                iaga_code, data = future.result()
+                if data is not None:
+                    observatory_name = valid_observatories[iaga_code]['Name']
+                    if isinstance(data, np.ndarray) and data.ndim == 1:
+                        timestamps = [item[0].decode('utf-8') for item in data]
+                        vectors = np.array([item[1] for item in data])
+                        magnitudes = [math.sqrt(x**2 + y**2 + z**2) for x, y, z in vectors]
+                        filtered_data = [(t, m) for t, m in zip(timestamps, magnitudes) if m <= 160000]
+                        if filtered_data:
+                            filtered_timestamps, filtered_magnitudes = zip(*filtered_data)
+                            combined_data[iaga_code] = (filtered_timestamps, filtered_magnitudes, observatory_name)
+                        else:
+                            print(f"Error: Alle Datenpunkte für Station {iaga_code} überschreiten den Schwellenwert von 160.000.")
+                    else:
+                        print(f"Error: Unerwartetes Datenformat für Station {iaga_code}.")
+            except Exception as e:
+                print(f"Error processing data for {iaga_code}: {str(e)}")
 
     if combined_data:
         print("Daten erfolgreich kombiniert. Starte Plot- und CSV-Erstellung...")
@@ -86,25 +92,26 @@ def save_combined_data_to_csv(combined_data, start, stop):
     os.makedirs(output_dir, exist_ok=True)
     csv_filename = os.path.join(output_dir, f'combined_data_{start[:10]}_to_{stop[:10]}.csv')
 
-    # Alle Zeitstempel sammeln
+    # Alle Zeitstempel sammeln und sortieren
     all_timestamps = sorted(set(ts for timestamps, _, _ in combined_data.values() for ts in timestamps))
 
-    with open(csv_filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        # Überschriftenzeile schreiben
-        header = ['Timestamp'] + [f'{observatory_name} ({iaga_code})' for iaga_code, (_, _, observatory_name) in combined_data.items()]
-        writer.writerow(header)
+    # Erstellen eines DataFrames für jede Station
+    data_frames = []
+    for iaga_code, (timestamps, magnitudes, observatory_name) in combined_data.items():
+        df = pd.DataFrame({'Timestamp': timestamps, f'{observatory_name} ({iaga_code})': magnitudes})
+        data_frames.append(df)
 
-        # Datenzeilen schreiben
-        for ts in all_timestamps:
-            row = [ts]
-            for iaga_code in combined_data.keys():
-                if ts in combined_data[iaga_code][0]:
-                    index = combined_data[iaga_code][0].index(ts)
-                    row.append(combined_data[iaga_code][1][index])
-                else:
-                    row.append('')
-            writer.writerow(row)
+    # Zusammenführen aller DataFrames basierend auf den Zeitstempeln
+    combined_df = pd.concat(data_frames, axis=1).groupby('Timestamp', as_index=False).first()
+
+    # Speichern des kombinierten DataFrames als CSV in einem In-Memory-Objekt
+    csv_buffer = io.StringIO()
+    combined_df.to_csv(csv_buffer, index=False, encoding='utf-8')
+    csv_content = csv_buffer.getvalue()
+
+    # Schreiben des CSV-Inhalts in die Datei
+    with open(csv_filename, 'w', encoding='utf-8') as file:
+        file.write(csv_content)
 
     print(f'Kombinierte Daten als CSV gespeichert: {csv_filename}')
 
@@ -204,19 +211,21 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     # Alle Zeitstempel sammeln und sortieren
     all_timestamps = sorted(set(ts for timestamps, _, _ in combined_data.values() for ts in timestamps))
 
-    # Interpolierte Magnituden für alle Stationen
-    interpolated_data = {}
+    # Erstellen eines DataFrames für die interpolierten Magnituden
+    interpolated_df = pd.DataFrame(index=pd.to_datetime(all_timestamps))
     for station in stations:
         timestamps, magnitudes, _ = combined_data[station]
         magnitudes_series = pd.Series(magnitudes, index=pd.to_datetime(timestamps))
-        magnitudes_series = magnitudes_series.reindex(pd.to_datetime(all_timestamps)).interpolate()
-        interpolated_data[station] = magnitudes_series
+        interpolated_df[station] = magnitudes_series
+
+    # Interpolieren der fehlenden Werte
+    interpolated_df = interpolated_df.interpolate()
 
     for i, station1 in enumerate(stations):
         for j, station2 in enumerate(stations):
             if i <= j:  # Nur obere Dreiecksmatrix berechnen
-                magnitudes1 = interpolated_data[station1]
-                magnitudes2 = interpolated_data[station2]
+                magnitudes1 = interpolated_df[station1]
+                magnitudes2 = interpolated_df[station2]
                 correlation = np.corrcoef(magnitudes1, magnitudes2)[0, 1]
                 correlation_matrix.loc[station1, station2] = correlation
                 correlation_matrix.loc[station2, station1] = correlation
