@@ -50,7 +50,7 @@ def fetch_data(iaga_code, server, parameters, start, stop, opts):
         print(f"Error fetching data for {iaga_code}: {str(e)}")
         return iaga_code, None
 
-def process_data(iaga_codes, start, stop, valid_observatories):
+def process_data(iaga_codes, start, stop, valid_observatories, filter_values):
     server = 'https://imag-data.bgs.ac.uk/GIN_V1/hapi'
     parameters = 'Field_Vector'
     opts = {'logging': True, 'usecache': True}
@@ -68,12 +68,15 @@ def process_data(iaga_codes, start, stop, valid_observatories):
                         timestamps = [item[0].decode('utf-8') for item in data]
                         vectors = np.array([item[1] for item in data])
                         magnitudes = [math.sqrt(x**2 + y**2 + z**2) for x, y, z in vectors]
-                        filtered_data = [(t, m) for t, m in zip(timestamps, magnitudes) if m <= 160000]
+                        if filter_values:
+                            filtered_data = [(t, m) for t, m in zip(timestamps, magnitudes) if m <= 100000]
+                        else:
+                            filtered_data = [(t, m) for t, m in zip(timestamps, magnitudes)]
                         if filtered_data:
                             filtered_timestamps, filtered_magnitudes = zip(*filtered_data)
                             combined_data[iaga_code] = (filtered_timestamps, filtered_magnitudes, observatory_name)
                         else:
-                            print(f"Error: Alle Datenpunkte für Station {iaga_code} überschreiten den Schwellenwert von 160.000.")
+                            print(f"Error: Alle Datenpunkte für Station {iaga_code} überschreiten den Schwellenwert von 100.000.")
                     else:
                         print(f"Error: Unerwartetes Datenformat für Station {iaga_code}.")
             except Exception as e:
@@ -305,7 +308,8 @@ def home():
             stations.append('BUE')
             valid_observatories['BUE'] = {'Name': 'BUE', 'Latitude': 53.651, 'Longitude': 9.424}
 
-        combined_data = process_data(stations, start, stop, valid_observatories)
+        filter_values = request.form.get('filter_values', 'true').lower() == 'true'
+        combined_data = process_data(stations, start, stop, valid_observatories, filter_values)
 
         if combined_data:
             plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)

@@ -79,6 +79,16 @@
                     <input type="datetime-local" class="form-control" id="stop" name="stop" value="{{ stop or '2024-10-01T00:00' }}" required>
                 </div>
             </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="filter_values" name="filter_values">
+                        <label class="form-check-label" for="filter_values">
+                            Werte über 100.000 herausfiltern
+                        </label>
+                    </div>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary btn-block">Daten abrufen und plotten</button>
         </form>
 
