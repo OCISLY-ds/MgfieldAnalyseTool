@@ -99,14 +99,16 @@ def save_combined_data_to_csv(combined_data, start, stop):
     data_frames = []
     for iaga_code, (timestamps, magnitudes, observatory_name) in combined_data.items():
         df = pd.DataFrame({'Timestamp': timestamps, f'{observatory_name} ({iaga_code})': magnitudes})
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        df.set_index('Timestamp', inplace=True)
         data_frames.append(df)
 
     # Zusammenführen aller DataFrames basierend auf den Zeitstempeln
-    combined_df = pd.concat(data_frames, axis=1).groupby('Timestamp', as_index=False).first()
+    combined_df = pd.concat(data_frames, axis=1).sort_index()
 
     # Speichern des kombinierten DataFrames als CSV in einem In-Memory-Objekt
     csv_buffer = io.StringIO()
-    combined_df.to_csv(csv_buffer, index=False, encoding='utf-8')
+    combined_df.to_csv(csv_buffer, index=True, encoding='utf-8')
     csv_content = csv_buffer.getvalue()
 
     # Schreiben des CSV-Inhalts in die Datei
