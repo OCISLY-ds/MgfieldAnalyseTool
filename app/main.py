@@ -185,12 +185,11 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
             ),
             lataxis=dict(
                 range=[30, 70]  # Breitengradbereich anpassen
-            )
+            ),
+            geojson='/static/world_110m.json'  # Lokale TopoJSON-Datei verwenden
         ),
         template='plotly_white',
-        margin=dict(l=0, r=0, t=0, b=0),  # Entfernen der Ränder
-        geo_scope='world',
-        geojson='/static/world_110m.json'  # Lokale TopoJSON-Datei verwenden
+        margin=dict(l=0, r=0, t=0, b=0)  # Entfernen der Ränder
     )
 
     map_plot_filename = f'stations_map_{start[:10]}_to_{stop[:10]}.html'
