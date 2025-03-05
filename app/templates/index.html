@@ -76,11 +76,11 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="start">Startzeit:</label>
-                    <input type="date" class="form-control" id="start" name="start" value="{{ start or '01-09-2024' }}" required>
+                    <input type="text" class="form-control" id="start" name="start" value="{{ start or '01-09-2024' }}" required>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="stop">Endzeit:</label>
-                    <input type="date" class="form-control" id="stop" name="stop" value="{{ stop or '01-10-2024' }}" required>
+                    <input type="text" class="form-control" id="stop" name="stop" value="{{ stop or '01-10-2024' }}" required>
                 </div>
             </div>
             <div class="form-row">
@@ -277,6 +277,17 @@
                 }).addTo(map);
             });
             {% endif %}
+        });
+
+        document.getElementById('data-form').addEventListener('submit', function(event) {
+            var startInput = document.getElementById('start');
+            var stopInput = document.getElementById('stop');
+
+            var startDate = startInput.value.split('-').reverse().join('-') + 'T00:00';
+            var stopDate = stopInput.value.split('-').reverse().join('-') + 'T00:00';
+
+            startInput.value = startDate;
+            stopInput.value = stopDate;
         });
     </script>
 </body>

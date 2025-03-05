@@ -291,12 +291,12 @@ def home():
         start_time = time.time()  # Startzeit messen
 
         selection_method = request.form.get('selection_method')
-        start = request.form.get('start', '01-09-2024')
-        stop = request.form.get('stop', '01-10-2024')
+        start = request.form.get('start', '01-09-2024T00:00')
+        stop = request.form.get('stop', '01-10-2024T00:00')
 
         # Konvertiere das Datum in das benötigte Format
-        start = datetime.strptime(start, '%d-%m-%Y').strftime('%Y-%m-%dT%H:%M')
-        stop = datetime.strptime(stop, '%d-%m-%Y').strftime('%Y-%m-%dT%H:%M')
+        start = datetime.strptime(start, '%Y-%m-%dT%H:%M').strftime('%Y-%m-%dT%H:%M')
+        stop = datetime.strptime(stop, '%Y-%m-%dT%H:%M').strftime('%Y-%m-%dT%H:%M')
 
         csv_file = os.path.join(os.getcwd(), 'intermagnet/IAGAlist.csv')
         valid_observatories = load_valid_observatories(csv_file)
