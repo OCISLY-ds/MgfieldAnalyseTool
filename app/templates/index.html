@@ -59,6 +59,10 @@
                     <label for="distance">Abstand zu BUE (Breitengrade):</label>
                     <input type="number" class="form-control" id="distance" name="distance" step="0.1" placeholder="z.B. 1.0">
                 </div>
+                <div class="form-group col-md-6">
+                    <label for="exclude_stations">Auszuschließende Stationen (Komma getrennt):</label>
+                    <input type="text" class="form-control" id="exclude_stations" name="exclude_stations" placeholder="z.B. NGK, ESK, VAL">
+                </div>
             </div>
             <div id="station_codes_selection" class="form-row" style="display: none;">
                 <div class="form-group col-md-6">
@@ -72,11 +76,11 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="start">Startzeit:</label>
-                    <input type="datetime-local" class="form-control" id="start" name="start" value="{{ start or '2024-09-01T00:00' }}" required>
+                    <input type="date" class="form-control" id="start" name="start" value="{{ start or '01-09-2024' }}" required>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="stop">Endzeit:</label>
-                    <input type="datetime-local" class="form-control" id="stop" name="stop" value="{{ stop or '2024-10-01T00:00' }}" required>
+                    <input type="date" class="form-control" id="stop" name="stop" value="{{ stop or '01-10-2024' }}" required>
                 </div>
             </div>
             <div class="form-row">

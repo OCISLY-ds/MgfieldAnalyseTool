@@ -247,13 +247,14 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
         # Berechnung der Entfernung in Kilometern
         return abs(lat1 - lat2) * (math.pi / 180) * R
 
-    station_labels = [f"{valid_observatories[code]['Name']} ({code})<br>{calculate_distance(bue_latitude, valid_observatories[code]['Latitude']):.0f} km" for code in stations]
+    station_labels_x = [f"{valid_observatories[code]['Name']} ({code})<br>{calculate_distance(bue_latitude, valid_observatories[code]['Latitude']):.0f} km" for code in stations]
+    station_labels_y = [f"{code}" for code in stations]
 
     # Plot der Korrelationsmatrix
     fig_corr = go.Figure(data=go.Heatmap(
         z=correlation_matrix.values.astype(float),
-        x=station_labels,
-        y=station_labels,
+        x=station_labels_x,
+        y=station_labels_y,
         colorscale='Greens',
         zmin=0,
         zmax=1,
@@ -290,8 +291,12 @@ def home():
         start_time = time.time()  # Startzeit messen
 
         selection_method = request.form.get('selection_method')
-        start = request.form.get('start', '2024-09-01T00:00')
-        stop = request.form.get('stop', '2024-10-01T00:00')
+        start = request.form.get('start', '01-09-2024')
+        stop = request.form.get('stop', '01-10-2024')
+
+        # Konvertiere das Datum in das benötigte Format
+        start = datetime.strptime(start, '%d-%m-%Y').strftime('%Y-%m-%dT%H:%M')
+        stop = datetime.strptime(stop, '%d-%m-%Y').strftime('%Y-%m-%dT%H:%M')
 
         csv_file = os.path.join(os.getcwd(), 'intermagnet/IAGAlist.csv')
         valid_observatories = load_valid_observatories(csv_file)
@@ -300,12 +305,14 @@ def home():
 
         if selection_method == 'latitude':
             distance = request.form.get('distance', type=float)
-            print(f"Benutzer hat folgende Zeiten eingegeben: Start = {start}, End = {stop}, Abstand = {distance}")
+            exclude_stations_input = request.form.get('exclude_stations')
+            exclude_stations = [station.strip().upper() for station in exclude_stations_input.split(',')] if exclude_stations_input else []
+            print(f"Benutzer hat folgende Zeiten eingegeben: Start = {start}, End = {stop}, Abstand = {distance}, Ausgeschlossene Stationen = {exclude_stations}")
 
             if distance is not None:
                 bue_latitude = 53.651
                 for code, observatory in valid_observatories.items():
-                    if abs(observatory['Latitude'] - bue_latitude) <= distance:
+                    if abs(observatory['Latitude'] - bue_latitude) <= distance and code not in exclude_stations:
                         stations.append(code)
 
         elif selection_method == 'station_codes':
