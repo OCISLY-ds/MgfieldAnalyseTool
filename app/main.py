@@ -212,7 +212,7 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     print("Starte Erstellung der Korrelationsmatrix...")  # Debugging-Ausgabe
     # Berechnung der Korrelationsmatrix
     bue_latitude = 53.651
-    stations = sorted(combined_data.keys(), key=lambda code: abs(valid_observatories[code]['Latitude'] - bue_latitude), reverse=True)
+    stations = sorted(combined_data.keys(), key=lambda code: abs(valid_observatories[code]['Latitude'] - bue_latitude))
     correlation_matrix = pd.DataFrame(index=stations, columns=stations)
 
     # Alle Zeitstempel sammeln und sortieren
@@ -240,11 +240,20 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
     # Erstellen des Textes für die Korrelationswerte
     text = correlation_matrix.applymap(lambda x: f'{x:.2f}')
 
+    # Berechnung der Abstände in Kilometern auf der Breitenachse zur BUE-Station
+    def calculate_distance(lat1, lat2):
+        # Radius der Erde in Kilometern
+        R = 6371.0
+        # Berechnung der Entfernung in Kilometern
+        return abs(lat1 - lat2) * (math.pi / 180) * R
+
+    station_labels = [f"{valid_observatories[code]['Name']} ({code})<br>{calculate_distance(bue_latitude, valid_observatories[code]['Latitude']):.0f} km" for code in stations]
+
     # Plot der Korrelationsmatrix
     fig_corr = go.Figure(data=go.Heatmap(
         z=correlation_matrix.values.astype(float),
-        x=correlation_matrix.columns,
-        y=correlation_matrix.index,
+        x=station_labels,
+        y=station_labels,
         colorscale='Greens',
         zmin=0,
         zmax=1,
@@ -325,7 +334,8 @@ def home():
             csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
             end_time = time.time()  # Endzeit messen
             elapsed_time = end_time - start_time  # Zeitdifferenz berechnen
-            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, elapsed_time=elapsed_time)
+            station_data = [{'name': valid_observatories[code]['Name'], 'latitude': valid_observatories[code]['Latitude'], 'longitude': valid_observatories[code]['Longitude']} for code in combined_data.keys()]
+            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, elapsed_time=elapsed_time, station_data=station_data)
         else:
             return render_template('index.html', message="Fehler: Keine Daten gefunden.", start=start, stop=stop)
     
