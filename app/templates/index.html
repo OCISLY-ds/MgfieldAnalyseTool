@@ -142,6 +142,13 @@
                 <a href="{{ url_for('download_file', filename=csv_url) }}" class="btn btn-secondary" download>CSV herunterladen</a>
             </div>
         {% endif %}
+
+        {% if elapsed_time %}
+            <div class="mt-4">
+                <h3>Verarbeitungszeit</h3>
+                <p>Die Verarbeitung hat {{ elapsed_time | round(2) }} Sekunden gedauert.</p>
+            </div>
+        {% endif %}
     </div>
 
     <footer>

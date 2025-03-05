@@ -12,6 +12,7 @@ import math
 from tqdm import tqdm
 import concurrent.futures
 import io
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -210,7 +211,8 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
 
     print("Starte Erstellung der Korrelationsmatrix...")  # Debugging-Ausgabe
     # Berechnung der Korrelationsmatrix
-    stations = list(combined_data.keys())
+    bue_latitude = 53.651
+    stations = sorted(combined_data.keys(), key=lambda code: abs(valid_observatories[code]['Latitude'] - bue_latitude), reverse=True)
     correlation_matrix = pd.DataFrame(index=stations, columns=stations)
 
     # Alle Zeitstempel sammeln und sortieren
@@ -235,6 +237,9 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
                 correlation_matrix.loc[station1, station2] = correlation
                 correlation_matrix.loc[station2, station1] = correlation
 
+    # Erstellen des Textes für die Korrelationswerte
+    text = correlation_matrix.applymap(lambda x: f'{x:.2f}')
+
     # Plot der Korrelationsmatrix
     fig_corr = go.Figure(data=go.Heatmap(
         z=correlation_matrix.values.astype(float),
@@ -243,6 +248,8 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
         colorscale='Greens',
         zmin=0,
         zmax=1,
+        text=text.values,
+        texttemplate="%{text}",
         colorbar=dict(title='Korrelation')
     ))
 
@@ -271,6 +278,8 @@ def save_and_plot_magnitude(combined_data, start, stop, valid_observatories):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        start_time = time.time()  # Startzeit messen
+
         selection_method = request.form.get('selection_method')
         start = request.form.get('start', '2024-09-01T00:00')
         stop = request.form.get('stop', '2024-10-01T00:00')
@@ -314,7 +323,9 @@ def home():
         if combined_data:
             plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
             csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
-            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop)
+            end_time = time.time()  # Endzeit messen
+            elapsed_time = end_time - start_time  # Zeitdifferenz berechnen
+            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, elapsed_time=elapsed_time)
         else:
             return render_template('index.html', message="Fehler: Keine Daten gefunden.", start=start, stop=stop)
     
