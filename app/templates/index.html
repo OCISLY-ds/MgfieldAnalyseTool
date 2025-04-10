@@ -283,8 +283,12 @@
             var startInput = document.getElementById('start');
             var stopInput = document.getElementById('stop');
 
-            var startDate = startInput.value.split('-').reverse().join('-') + 'T00:00';
-            var stopDate = stopInput.value.split('-').reverse().join('-') + 'T00:00';
+            // Konvertiere das Datum von DD-MM-YYYY zu YYYY-MM-DD
+            var startDateParts = startInput.value.split('-');
+            var stopDateParts = stopInput.value.split('-');
+
+            var startDate = `${startDateParts[2]}-${startDateParts[1]}-${startDateParts[0]}T00:00`;
+            var stopDate = `${stopDateParts[2]}-${stopDateParts[1]}-${stopDateParts[0]}T00:00`;
 
             startInput.value = startDate;
             stopInput.value = stopDate;
