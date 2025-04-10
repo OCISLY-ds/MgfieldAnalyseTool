@@ -291,8 +291,8 @@ def home():
         start_time = time.time()  # Startzeit messen
 
         selection_method = request.form.get('selection_method')
-        start = request.form.get('start', '01-09-2024T00:00')
-        stop = request.form.get('stop', '01-10-2024T00:00')
+        start = request.form.get('start', '2024-09-01T00:00')
+        stop = request.form.get('stop', '2024-10-01T00:00')
 
         # Konvertiere das Datum in das benötigte Format
         start = datetime.strptime(start, '%Y-%m-%dT%H:%M').strftime('%Y-%m-%dT%H:%M')
