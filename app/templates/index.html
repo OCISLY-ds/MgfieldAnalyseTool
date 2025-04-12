@@ -147,6 +147,8 @@
             <div class="mt-4">
                 <h3>Verarbeitungszeit</h3>
                 <p>Die Verarbeitung hat {{ elapsed_time | round(2) }} Sekunden gedauert.</p>
+                <p>Verarbeitete Datenpunkte: {{ data_count }}</p>
+                <p>Größe der CSV-Datei: {{ data_size_mb }} MB</p>
             </div>
         {% endif %}
     </div>
