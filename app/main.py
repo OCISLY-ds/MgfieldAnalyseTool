@@ -329,13 +329,36 @@ def home():
         filter_values = request.form.get('filter_values', 'true').lower() == 'true'
         combined_data = process_data(stations, start, stop, valid_observatories, filter_values)
 
+        # Im Branch, wenn combined_data vorhanden ist:
         if combined_data:
             plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
-            csv_filename = f'combined_data_{start[:10]}_to_{stop[:10]}.csv'
+            csv_filename = os.path.join(app.config['DOWNLOAD_FOLDER'], 'combined', f'combined_data_{start[:10]}_to_{stop[:10]}.csv')
             end_time = time.time()  # Endzeit messen
             elapsed_time = end_time - start_time  # Zeitdifferenz berechnen
-            station_data = [{'name': valid_observatories[code]['Name'], 'latitude': valid_observatories[code]['Latitude'], 'longitude': valid_observatories[code]['Longitude']} for code in combined_data.keys()]
-            return render_template('index.html', message="Plots erfolgreich erstellt!", plot_url=f'combined/{plot_filename}', map_plot_url=f'combined/{map_plot_filename}', corr_plot_url=f'combined/{corr_plot_filename}', plot_jpg_url=f'combined/{plot_jpg_filename}', map_plot_jpg_url=f'combined/{map_plot_jpg_filename}', corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}', csv_url=f'combined/{csv_filename}', start=start, stop=stop, elapsed_time=elapsed_time, station_data=station_data)
+
+            # Berechne die Gesamtzahl der verarbeiteten Datenpunkte
+            data_count = sum(len(timestamps) for timestamps, _, _ in combined_data.values())
+            # Berechne die Größe der CSV-Datei in MB
+            data_size_mb = os.path.getsize(csv_filename) / (1024 * 1024)
+            
+            station_data = [{'name': valid_observatories[code]['Name'], 
+                             'latitude': valid_observatories[code]['Latitude'], 
+                             'longitude': valid_observatories[code]['Longitude']} 
+                            for code in combined_data.keys()]
+            return render_template('index.html',
+                                   message="Plots erfolgreich erstellt!",
+                                   plot_url=f'combined/{plot_filename}',
+                                   map_plot_url=f'combined/{map_plot_filename}',
+                                   corr_plot_url=f'combined/{corr_plot_filename}',
+                                   plot_jpg_url=f'combined/{plot_jpg_filename}',
+                                   map_plot_jpg_url=f'combined/{map_plot_jpg_filename}',
+                                   corr_plot_jpg_url=f'combined/{corr_plot_jpg_filename}',
+                                   csv_url=f'combined/{os.path.basename(csv_filename)}',
+                                   start=start, stop=stop,
+                                   elapsed_time=elapsed_time,
+                                   data_count=data_count,
+                                   data_size_mb=round(data_size_mb, 2),
+                                   station_data=station_data)
         else:
             return render_template('index.html', message="Fehler: Keine Daten gefunden.", start=start, stop=stop)
     
