@@ -276,6 +276,22 @@
             });
             {% endif %}
         });
+
+        // Falls der Nutzer nur ein Datum auswählt (ohne Zeit), setzen wir automatisch "T00:00".
+        function ensureTime(inputId) {
+            var input = document.getElementById(inputId);
+            if (input.value && !input.value.includes("T")) {
+                input.value = input.value + "T00:00";
+            }
+        }
+        
+        // Bei Änderung des jeweiligen Feldes prüfen
+        document.getElementById('start').addEventListener('blur', function() {
+            ensureTime('start');
+        });
+        document.getElementById('stop').addEventListener('blur', function() {
+            ensureTime('stop');
+        });
     </script>
 </body>
 </html>
