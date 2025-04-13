@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
     <style>
         body {
@@ -72,13 +74,13 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="start">Startzeit:</label>
-                    <!-- Textfeld im Format DD-MM-YYYY HH:MM -->
-                    <input type="text" class="form-control" id="start" name="start" placeholder="DD-MM-YYYY HH:MM" value="{{ start or '' }}" required>
+                    <!-- Input-Feld für Datum und Uhrzeit mit Flatpickr -->
+                    <input type="text" class="form-control" id="start" name="start" placeholder="Datum und Uhrzeit wählen" value="{{ start or '' }}" required>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="stop">Endzeit:</label>
-                    <!-- Textfeld im Format DD-MM-YYYY HH:MM -->
-                    <input type="text" class="form-control" id="stop" name="stop" placeholder="DD-MM-YYYY HH:MM" value="{{ stop or '' }}" required>
+                    <!-- Input-Feld für Datum und Uhrzeit mit Flatpickr -->
+                    <input type="text" class="form-control" id="stop" name="stop" placeholder="Datum und Uhrzeit wählen" value="{{ stop or '' }}" required>
                 </div>
             </div>
             <div class="form-row">
@@ -166,6 +168,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
     <script>
         // Nachricht nach 5 Sekunden ausblenden
         setTimeout(function() {
@@ -206,31 +211,22 @@
             stationInput.value = 'NGK, ESK, VAL, WNG, HLP';
         });
 
+        // Flatpickr für Datum und Uhrzeit initialisieren
+        flatpickr("#start", {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d\\TH:i",
+            locale: "de"
+        });
+        flatpickr("#stop", {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d\\TH:i",
+            locale: "de"
+        });
+
         // Zeige Ladesymbol beim Absenden des Formulars
         document.getElementById('data-form').addEventListener('submit', function(event) {
-            var startInput = document.getElementById('start');
-            var stopInput = document.getElementById('stop');
-            
-            // Erwartetes Format: "DD-MM-YYYY HH:MM"
-            var dateTimeRegex = /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})$/;
-            
-            var startMatch = startInput.value.match(dateTimeRegex);
-            var stopMatch  = stopInput.value.match(dateTimeRegex);
-            
-            if (!startMatch || !stopMatch) {
-                alert("Bitte gebe ein gültiges Datum im Format DD-MM-YYYY HH:MM ein.");
-                event.preventDefault();
-                return;
-            }
-            
-            // Aus den erfassten Gruppen: [Tag, Monat, Jahr, Stunde, Minute]
-            var startFormatted = startMatch[3] + "-" + startMatch[2] + "-" + startMatch[1] + "T" + startMatch[4] + ":" + startMatch[5];
-            var stopFormatted  = stopMatch[3]  + "-" + stopMatch[2]  + "-" + stopMatch[1]  + "T" + stopMatch[4]  + ":" + stopMatch[5];
-            
-            // Überschreibe die Input-Werte (sodass im Formular der konvertierte Wert an das Backend geschickt wird)
-            startInput.value = startFormatted;
-            stopInput.value  = stopFormatted;
-            
             document.getElementById('loading').style.display = 'block';
         });
 
@@ -300,22 +296,6 @@
                 }).addTo(map);
             });
             {% endif %}
-        });
-
-        // Falls der Nutzer nur ein Datum auswählt (ohne Zeit), setzen wir automatisch "T00:00".
-        function ensureTime(inputId) {
-            var input = document.getElementById(inputId);
-            if (input.value && !input.value.includes("T")) {
-                input.value = input.value + "T00:00";
-            }
-        }
-        
-        // Bei Änderung des jeweiligen Feldes prüfen
-        document.getElementById('start').addEventListener('blur', function() {
-            ensureTime('start');
-        });
-        document.getElementById('stop').addEventListener('blur', function() {
-            ensureTime('stop');
         });
     </script>
 </body>
