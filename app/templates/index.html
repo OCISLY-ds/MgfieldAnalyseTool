@@ -50,16 +50,15 @@
                 <div class="form-group col-md-6">
                     <label for="selection_method">Auswahlmethode:</label>
                     <select class="form-control" id="selection_method" name="selection_method" required>
-                        <option value="" disabled selected>Bitte wählen...</option>
-                        <option value="latitude">Abstand in Breitengraden</option>
+                        <option value="latitude" selected>Abstand in Breitengraden</option>
                         <option value="station_codes">Stationscodes</option>
                     </select>
                 </div>
             </div>
-            <div id="latitude_selection" class="form-row" style="display: none;">
+            <div id="latitude_selection" class="form-row" style="display: block;">
                 <div class="form-group col-md-6">
                     <label for="distance">Abstand zu BUE (Breitengrade):</label>
-                    <input type="number" class="form-control" id="distance" name="distance" step="0.1" placeholder="z.B. 1.0">
+                    <input type="number" class="form-control" id="distance" name="distance" value="2" step="0.1" placeholder="z.B. 1.0">
                 </div>
             </div>
             <div id="station_codes_selection" class="form-row" style="display: none;">
@@ -86,7 +85,7 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="filter_values" name="filter_values">
+                        <input class="form-check-input" type="checkbox" id="filter_values" name="filter_values" checked>
                         <label class="form-check-label" for="filter_values">
                             Werte über 100.000 herausfiltern
                         </label>
