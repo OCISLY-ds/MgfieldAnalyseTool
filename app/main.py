@@ -328,6 +328,8 @@ def home():
 
         # Im Branch, wenn combined_data vorhanden ist:
         if combined_data:
+            # Sicherstellen, dass die CSV-Datei erstellt wird.
+            save_combined_data_to_csv(combined_data, start, stop)
             plot_filename, map_plot_filename, corr_plot_filename, plot_jpg_filename, map_plot_jpg_filename, corr_plot_jpg_filename = save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
             csv_filename = os.path.join(app.config['DOWNLOAD_FOLDER'], 'combined', f'combined_data_{start[:10]}_to_{stop[:10]}.csv')
             end_time = time.time()  # Endzeit messen
