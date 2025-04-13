@@ -84,10 +84,7 @@ def process_data(iaga_codes, start, stop, valid_observatories, filter_values):
                 print(f"Error processing data for {iaga_code}: {str(e)}")
 
     if combined_data:
-        print("Daten erfolgreich kombiniert. Starte Plot- und CSV-Erstellung...")
-        save_and_plot_magnitude(combined_data, start, stop, valid_observatories)
-        save_combined_data_to_csv(combined_data, start, stop)
-        print("Plot- und CSV-Erstellung abgeschlossen.")
+        print("Daten erfolgreich kombiniert.")
     
     return combined_data
 
